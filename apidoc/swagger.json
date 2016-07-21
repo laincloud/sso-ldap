@@ -1,0 +1,504 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "SSO-LDAP API 文档",
+        "version": "0.1.0",
+        "contact": {
+            "email": "chaoyiwang@creditease.cn"
+        }
+    },
+    "host": "sso-ldap.lain.cloud",
+    "basePath": "/api",
+    "schemes": [
+        "https"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/users/{username}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "username",
+                    "required": true,
+                    "description": "用户名",
+                    "type": "string",
+                    "format": "slug"
+                }
+            ],
+            "get": {
+                "summary": "获取用户信息",
+                "responses": {
+                    "200": {
+                        "description": "用户信息",
+                        "schema": {
+                            "$ref": "#/definitions/UserWithGroups"
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "summary": "获取当前用户的信息",
+                "responses": {
+                    "200": {
+                        "description": "用户信息",
+                        "schema": {
+                            "$ref": "#/definitions/UserWithGroups"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": []
+                    }
+                ]
+            }
+        },
+        "/apps": {
+            "post": {
+                "summary": "创建应用",
+                "description": "创建一个新应用，返回用于 OAuth2 流程的Client ID和secret。\n\n同时会自动创建一个 group 用于管理该应用，该 group\n创建时只有一个成员，即当前创建应用的用户。\n",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "description": "需要创建的应用",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "fullname": {
+                                    "$ref": "#/definitions/FullName"
+                                }
+                            },
+                            "required": [
+                                "fullname"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "成功创建应用",
+                        "schema": {
+                            "$ref": "#/definitions/App"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:app"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/groups": {
+            "post": {
+                "summary": "创建用户组",
+                "description": "创建一个新用户组。\n\n如果不设置 backend 字段或者 backend 为0，则创建 ssolib 类型的 group. 此时当前用户会自动加入该组，并成为该组的管理员。\n 若 backend 字段为1，此时要提供一个 ldap 规则，这种 group 称为 ldap group, ldap 组织对应的成员都会成为 ldap group 的普通成员, 这种组是不可用删的。ldap 规则的一个例子为`OU=***,OU=***,OU=**,OU=**,DC=*,DC=*`",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "description": "需要创建的组",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "$ref": "#/definitions/Slug"
+                                },
+                                "fullname": {
+                                    "$ref": "#/definitions/FullName"
+                                },
+                                "backend": {
+                                    "type": "integer"
+                                },
+                                "rules": {
+                                    "$ref": "#/definitions/FullName"
+                                }
+                            },
+                            "required": [
+                                "name"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "成功创建用户组",
+                        "schema": {
+                            "$ref": "#/definitions/Group"
+                        }
+                    },
+                    "409": {
+                        "description": "名字已被占用"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:group"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/groups/{groupname}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "groupname",
+                    "required": true,
+                    "type": "string",
+                    "format": "slug"
+                }
+            ],
+            "get": {
+                "summary": "列出组的信息",
+                "description": "注意，members 只包含直接子节点，可能为用户或者组，当该组是 backend group 时，不返回成员列表",
+                "responses": {
+                    "200": {
+                        "description": "组信息",
+                        "schema": {
+                            "$ref": "#/definitions/GroupWithMembers"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "删除组",
+                "description": "只有组的管理员才能删除组",
+                "responses": {
+                    "204": {
+                        "description": "成功删除组"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:group"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/groups/{groupname}/members/{username}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "groupname",
+                    "required": true,
+                    "type": "string",
+                    "format": "slug"
+                },
+                {
+                    "in": "path",
+                    "name": "username",
+                    "required": true,
+                    "type": "string",
+                    "format": "slug"
+                }
+            ],
+            "put": {
+                "summary": "向组中加入用户",
+                "description": "需要当前用户是组管理员身份。\n\n如果未指定 `role` ，则对于新增成员，默认为普通成员；\n对于已有成员，默认角色不变。\n",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "role": {
+                                    "enum": [
+                                        "admin",
+                                        "normal"
+                                    ],
+                                    "description": "默认为 normal"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "成功加入组"
+                    },
+                    "404": {
+                        "description": "组或者用户不存在"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:group"
+                        ]
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "从组中去除一名用户",
+                "responses": {
+                    "204": {
+                        "description": "成功去除用户"
+                    },
+                    "404": {
+                        "description": "组或用户不存在"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:group"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/groups/{groupname}/group-members/{sonname}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "groupname",
+                    "required": true,
+                    "type": "string",
+                    "format": "slug"
+                },
+                {
+                    "in": "path",
+                    "name": "sonname",
+                    "required": true,
+                    "type": "string",
+                    "format": "slug"
+                }
+            ],
+            "put": {
+                "summary": "向组中加入组",
+                "description": "需要当前用户是组管理员身份。\n\n如果未指定 `role` ，则对于新增成员，默认为普通成员；\n对于已有成员，默认角色不变。\n",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "role": {
+                                    "enum": [
+                                        "admin",
+                                        "normal"
+                                    ],
+                                    "description": "默认为 normal"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功加入组"
+                    },
+                    "400": {
+                        "description": "由于逻辑关系，比如超过最大深度或者出现循环依赖，导致不能加入"
+                    },
+                    "404": {
+                        "description": "组或者用户不存在"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:group"
+                        ]
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "从组中去除一个组",
+                "responses": {
+                    "204": {
+                        "description": "成功去除组"
+                    },
+                    "404": {
+                        "description": "组或用户不存在"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth": [
+                            "write:group"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "securityDefinitions": {
+        "oauth": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "https://sso-ldap.lain.cloud/oauth2/auth",
+            "tokenUrl": "https://sso-ldap.lain.cloud/oauth2/token",
+            "scopes": {
+                "write:user": "修改用户信息，或删除用户",
+                "write:app": "创建新应用，或修改用户可管理的应用信息",
+                "write:group": "创建新用户组，或修改用户参加的组"
+            }
+        }
+    },
+    "definitions": {
+        "UserRegistration": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/Slug"
+                },
+                "fullname": {
+                    "$ref": "#/definitions/FullName"
+                },
+                "email": {
+                    "$ref": "#/definitions/UserEmail"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "mobile": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "email",
+                "password"
+            ]
+        },
+        "User": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/Slug"
+                },
+                "fullname": {
+                    "$ref": "#/definitions/FullName"
+                },
+                "email": {
+                    "$ref": "#/definitions/UserEmail"
+                },
+                "mobile": {
+                    "type": "string"
+                }
+            }
+        },
+        "App": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "应用ID，用于 OAuth2 授权过程"
+                },
+                "fullname": {
+                    "$ref": "#/definitions/FullName"
+                },
+                "secret": {
+                    "type": "string",
+                    "description": "用于 OAuth2 过程的应用私钥"
+                },
+                "admin_group": {
+                    "$ref": "#/definitions/Group",
+                    "description": "对本应用拥有管理权限的组"
+                }
+            }
+        },
+        "Group": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/Slug"
+                },
+                "fullname": {
+                    "$ref": "#/definitions/FullName"
+                }
+            }
+        },
+        "UserWithGroups": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/Slug"
+                },
+                "fullname": {
+                    "$ref": "#/definitions/FullName"
+                },
+                "email": {
+                    "$ref": "#/definitions/UserEmail"
+                },
+                "mobile": {
+                    "type": "string"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Slug",
+                        "description": "用户所属的组名"
+                    }
+                }
+            }
+        },
+        "GroupWithMembers": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/Slug"
+                },
+                "fullname": {
+                    "$ref": "#/definitions/FullName"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "$ref": "#/definitions/Slug"
+                            },
+                            "role": {
+                                "$ref": "#/definitions/MemberRole",
+                                "description": "如果忽略，则为普通成员"
+                            }
+                        },
+                        "required": [
+                            "name"
+                        ],
+                        "description": "组成员"
+                    }
+                }
+            }
+        },
+        "FullName": {
+            "type": "string",
+            "description": "用于显示的名称",
+            "maxLength": 128
+        },
+        "Slug": {
+            "type": "string",
+            "description": "全局唯一的名称",
+            "pattern": "[A-Za-z][A-Za-z0-9-]*",
+            "maxLength": 32
+        },
+        "UserEmail": {
+            "type": "string",
+            "description": "以 @lain.cloud 结尾的 email 地址"
+        }
+    }
+}

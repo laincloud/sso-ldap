@@ -1,0 +1,41 @@
+appname: sso-ldap
+
+build:
+  base: golang
+  prepare:
+    version: 20160720
+    script:
+      - apt-get -y update
+      - apt-get -y install unzip
+      - apt-get install -y npm && ln -s /usr/bin/nodejs /usr/bin/node
+      - go get github.com/tools/godep
+      - apt-get -y install libldap-dev
+      - mkdir -p /go/src/github.com/laincloud/
+      - ln -sf /lain/app /go/src/github.com/laincloud/sso-ldap
+      - go get github.com/mijia/gobuildweb
+      - make go-build
+    keep:
+      - node_modules
+  script:
+    - make go-build
+    - unzip -o /lain/app/sso-0.1.zip -d /lain/app
+
+release:
+  dest_base: hongqn/go-npm
+  script:
+    - apt-get -y install libldap2-dev
+  copy:
+    - src: /lain/app/sso-0.1/*
+      dest: /lain/app/
+
+web:
+  cmd: ./run.sh
+  port: 80
+  env:
+    - TEMPLATES_PATH=/lain/app/templates
+  secret_files:
+    - secrets
+    - newcert.crt
+
+notify:
+  slack: "#sso"
