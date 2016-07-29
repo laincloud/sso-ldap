@@ -24,6 +24,7 @@ func AuthUPN(mail string, passwd string) (bool, error) {
 	ldap.SetOption(openldap.LDAP_OPT_PROTOCOL_VERSION, openldap.LDAP_VERSION3)
 	err = ldap.Bind(mail, passwd)
 	if err != nil {
+		log.Debug(err)
 		return false, nil
 	} else {
 		// Close will panic if bind fails
