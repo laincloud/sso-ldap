@@ -40,6 +40,7 @@ func NewClient(url string, cn string, password string, base string) (*LdapClient
 		log.Error(err)
 		return nil, err
 	}
+	log.Debug("init ldap client successfully")
 	return &LdapClient{
 		Ldap: ldap,
 	}, nil
@@ -47,7 +48,9 @@ func NewClient(url string, cn string, password string, base string) (*LdapClient
 
 func (c *LdapClient) ReConnect() {
 	c.Close()
-	temp, _ := NewClient(ldapUrl, cUSER, cPASSWORD, BASE)
+	log.Debug("reconnect")
+	temp, err := NewClient(ldapUrl, cUSER, cPASSWORD, BASE)
+	log.Debug(temp, err)
 	c.Ldap = temp.Ldap
 }
 
@@ -65,10 +68,12 @@ func (c *LdapClient) search(filter string) (*openldap.LdapSearchResult, error) {
 func (c *LdapClient) SearchForUser(filter string) (*openldap.LdapSearchResult, error) {
 	// LDAP_SCOPE_BASE, LDAP_SCOPE_ONELEVEL, LDAP_SCOPE_SUBTREE
 	scope := openldap.LDAP_SCOPE_SUBTREE
-	attributes := []string{"cn", "whenCreated", "employeeID", "whenChanged",
-		"userPrincipalName", "mail", "mailNickname"}
+	attributes := []string{"*"}
+	//	attributes := []string{"cn", "whenCreated", "employeeID", "whenChanged",
+	//		"userPrincipalName", "mail", "mailNickname"}
 	log.Debug("begin to call ldap lib")
 	result, err := c.Ldap.SearchAll(BASE, scope, filter, attributes)
+	log.Debug(result)
 	log.Debug("end to call ldap lib")
 	if err != nil {
 		log.Error(err)

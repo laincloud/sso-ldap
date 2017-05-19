@@ -37,6 +37,13 @@ func (ug *UserWithGroups) MarshalJSON() ([]byte, error) {
 func (s *Server) UsersList(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
 	status, obj := requireScope(ctx, "read:user", func(u iuser.User) (int, interface{}) {
 		mctx := getModelContext(ctx)
+
+		adminsGroup, err := group.GetGroupByName(mctx, "admins")
+		if err != nil {
+			panic(err)
+		}
+		isAdmin, _, _ := adminsGroup.GetMember(mctx, u)
+
 		ub := getUserBackend(ctx)
 		// FIXME 增加一个参数，以防数据库里条目过多
 		users, err := ub.ListUsers(ctx)
@@ -60,8 +67,14 @@ func (s *Server) UsersList(ctx context.Context, w http.ResponseWriter, r *http.R
 					groups = append(groups, g.Name)
 				}
 			}
+			var profile iuser.UserProfile
+			if isAdmin {
+				profile = u.GetProfile()
+			} else {
+				profile = u.GetPublicProfile()
+			}
 			ug := &UserWithGroups{
-				User:   u.GetProfile(),
+				User:   profile,
 				Groups: groups,
 			}
 			results[i] = ug
@@ -108,8 +121,28 @@ func (ur UserResource) Get(ctx context.Context, r *http.Request) (int, interface
 		groups[i] = g.Name
 	}
 
+	var profile iuser.UserProfile
+	currentUser := getCurrentUser(ctx)
+	isAdmin := false
+	isSelf := false
+	if currentUser != nil {
+		adminsGroup, err := group.GetGroupByName(mctx, "admins")
+		if err != nil {
+			panic(err)
+		}
+		isAdmin, _, _ = adminsGroup.GetMember(mctx, currentUser)
+		if currentUser.GetName() == u.GetName() {
+			isSelf = true
+		}
+	}
+
+	if currentUser == nil || (!isAdmin && !isSelf) {
+		profile = u.GetPublicProfile()
+	} else {
+		profile = u.GetProfile()
+	}
 	ret := &UserWithGroups{
-		User:   u.GetPublicProfile(),
+		User:   profile,
 		Groups: groups,
 	}
 	return http.StatusOK, ret
@@ -131,23 +164,13 @@ func (ur UserResource) Delete(ctx context.Context, r *http.Request) (int, interf
 			return http.StatusNotFound, "no such user"
 		}
 
-		isCurrentUserAdmin := false
 		adminsGroup, err := group.GetGroupByName(mctx, "admins")
 		if err != nil {
 			panic(err)
 		}
-		admins, err := adminsGroup.ListMembers(mctx)
-		if err != nil {
-			panic(err)
-		}
-		for _, admin := range admins {
-			if admin.GetId() == currentUser.GetId() {
-				isCurrentUserAdmin = true
-				break
-			}
-		}
 
-		if !isCurrentUserAdmin {
+		ok, _, _ := adminsGroup.GetMember(mctx, currentUser)
+		if !ok {
 			return http.StatusForbidden, "have no permission"
 		}
 

@@ -1,18 +1,19 @@
 package user
 
 import (
-	"strconv"
+	"database/sql"
 	"strings"
-	"time"
 
 	"github.com/mijia/sweb/log"
-	//	"github.com/mqu/openldap"
 
 	"github.com/laincloud/sso-ldap/ssoldap/user/ldap"
 	"github.com/laincloud/sso/ssolib/models/iuser"
 )
 
-var baseTime = time.Date(2000, 1, 1, 12, 1, 1, 0, time.UTC)
+type UPN struct {
+	Id    int
+	Email string
+}
 
 func (ub *UserBack) Search(filter string) (*User, error) {
 	ret := &User{}
@@ -37,14 +38,10 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 			switch attr.Name() {
 			case "cn":
 				ret.FullName = v
-			case "employeeID":
-				ret.Id = getIdByEId(v)
-				//			case "mail":
-				//				ret.Email = v
 			case "userPrincipalName":
 				ret.Email = v
-			case "mailNickname":
-				ret.Name = v
+				ret.Name = getUserNameByUPN(v)
+				ret.Id, err = ub.getIdByUPN(v)
 			case "whenCreated":
 				ret.Created = v
 			case "whenChanged":
@@ -56,53 +53,44 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 	return ret, nil
 }
 
-func getIdByEId(employeeID string) int {
-	// 为了节省内存，我们暂且认为员工编号是 20********** 共12位数字
-	// 考虑到 int 的范围 是 2147483647 ~ -2147483648
-	if len(employeeID) != 12 {
-		panic("unexpected employeeID")
-	}
-	if !strings.HasPrefix(employeeID, "20") {
-		log.Error("unexpected employeeID:" + employeeID)
-	}
-	// 将员工的前八位映射成当前日期距离 20000101 的天数
-	year, err := strconv.Atoi(employeeID[0:4])
-	if err != nil {
-		panic(err)
-	}
-	month, err := strconv.Atoi(employeeID[4:6])
-	if err != nil {
-		panic(err)
-	}
-	day, err := strconv.Atoi(employeeID[6:8])
-	if err != nil {
-		panic(err)
-	}
-	idTime := time.Date(year, time.Month(month), day, 12, 1, 1, 0, time.UTC)
-	idUTime := idTime.Unix()
-	baseUTime := baseTime.Unix()
-	between := idUTime - baseUTime
-	days := int(between / 3600 / 24)
-	sDays := strconv.Itoa(days)
-	if len(sDays) > 8 {
-		log.Error(year, " ", month, " ", day, " ", idUTime, " ", baseUTime)
-		panic("impossible")
-	}
-	last, err := strconv.Atoi(employeeID[8:12])
-	if err != nil {
-		log.Error(employeeID)
-		panic(err)
-	}
-	id := days*10000 + last
-	return id
+// the UPN is email, and the name is the prefix of the email
+// if the usage of ldap is diffrent, you must fix
+func getUserNameByUPN(upn string) string {
+	atIndex := strings.Index(upn, "@")
+	return upn[0:atIndex]
 }
 
-func getEIdById(id int) string {
-	last := strconv.Itoa((id % 10000) + 10000)
-	between := id / 10000 * 3600 * 24
-	baseUTime := baseTime.Unix()
-	idUTime := baseUTime + int64(between)
-	idTime := time.Unix(idUTime, 0)
-	first := idTime.Format("20060102")
-	return first + last[1:]
+// is the upn is not in mysql, insert and return the id
+func (ub *UserBack) getIdByUPN(upn string) (int, error) {
+	item := UPN{}
+	tx := ub.DB.MustBegin()
+	err := tx.Get(&item, "SELECT * FROM email_id  WHERE email=?", upn)
+	if err == sql.ErrNoRows {
+		result, err1 := tx.Exec("INSERT INTO email_id (email) "+"VALUES(?)", upn)
+		if err2 := tx.Commit(); err2 != nil {
+			log.Error(err2)
+			return -1, err2
+		}
+		if err1 != nil {
+			log.Error(err1)
+			return -1, err1
+		}
+		if id, err := result.LastInsertId(); err != nil {
+			log.Error(err)
+			return -1, err
+		} else {
+			return int(id), nil
+		}
+	} else if err != nil {
+		log.Error(err)
+		return -1, err
+	} else {
+		return item.Id, nil
+	}
+}
+
+func (ub *UserBack) getUPNById(id int) (string, error) {
+	item := UPN{}
+	err := ub.DB.Get(&item, "SELECT * FROM email_id  WHERE id=?", id)
+	return item.Email, err
 }

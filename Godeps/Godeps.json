@@ -1,6 +1,7 @@
 {
 	"ImportPath": "github.com/laincloud/sso-ldap",
 	"GoVersion": "go1.6",
+	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
 	],
@@ -8,6 +9,10 @@
 		{
 			"ImportPath": "github.com/RangelReale/osin",
 			"Rev": "7da44eb917fe702e84fd733dac03707e3ceccc08"
+		},
+		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
 		{
 			"ImportPath": "github.com/docker/libtrust",
@@ -28,13 +33,64 @@
 			"Rev": "23a7b787ffc1205098c38f534c4bf3764ae7b713"
 		},
 		{
+			"ImportPath": "github.com/jmoiron/sqlx/reflectx",
+			"Comment": "sqlx-v1.1-15-g23a7b78",
+			"Rev": "23a7b787ffc1205098c38f534c4bf3764ae7b713"
+		},
+		{
 			"ImportPath": "github.com/julienschmidt/httprouter",
 			"Comment": "v1.1",
 			"Rev": "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib",
-			"Rev": "a1b5573132f675f038d24eb6fa77d47d09eaee8d"
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/lock",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models/app",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models/group",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models/iuser",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models/oauth2",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models/testbackend",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/models/testhelper",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+		},
+		{
+			"ImportPath": "github.com/laincloud/sso/ssolib/utils",
+			"Comment": "0.2.0-29-g75a440b",
+			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
 		},
 		{
 			"ImportPath": "github.com/mendsley/gojwk",
@@ -74,22 +130,16 @@
 			"Rev": "cccd189d45f7ac3368a0d127efb7f4d08ae0b655"
 		},
 		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
+		},
+		{
 			"ImportPath": "github.com/stretchr/graceful",
 			"Comment": "v1-9-g49b853e",
 			"Rev": "49b853e77ab58c31be0d3ee87db62909b90ac93e"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.3-6-g6fe211e",
-			"Rev": "6fe211e493929a8aac0469b93f28b1d0688a9a3a"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
-			"Comment": "v1.1.3-6-g6fe211e",
-			"Rev": "6fe211e493929a8aac0469b93f28b1d0688a9a3a"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
 			"Comment": "v1.1.3-6-g6fe211e",
 			"Rev": "6fe211e493929a8aac0469b93f28b1d0688a9a3a"
 		},

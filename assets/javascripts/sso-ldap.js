@@ -8,17 +8,17 @@ import React from 'react';
 import {Router, Route} from 'react-router';
 import createBrowserHistory from 'history/lib/createBrowserHistory'
 
-import {createElement} from './sso/app';
-import Homepage from './sso/pages/Homepage';
-import RegisterPage from './sso/pages/RegisterPage';
-import LogoutPage from './sso/pages/LogoutPage';
-import ResetPasswordPage from './sso/pages/ResetPasswordPage';
-import ResetPasswordConfirmPage from './sso/pages/ResetPasswordConfirmPage';
-import AdminAuthorizePage from './sso/pages/AdminAuthorizePage';
-import AdminAppsPage from './sso/pages/AdminAppsPage';
-import AdminGroupsPage from './sso/pages/AdminGroupsPage';
-import AdminMembersPage from './sso/pages/AdminMembersPage';
-import AdminUsersPage from './sso/pages/AdminUsersPage';
+import {createElement} from './sso-ldap/app';
+import Homepage from './sso-ldap/pages/Homepage';
+import RegisterPage from './sso-ldap/pages/RegisterPage';
+import LogoutPage from './sso-ldap/pages/LogoutPage';
+import ResetPasswordPage from './sso-ldap/pages/ResetPasswordPage';
+import ResetPasswordConfirmPage from './sso-ldap/pages/ResetPasswordConfirmPage';
+import AdminAuthorizePage from './sso-ldap/pages/AdminAuthorizePage';
+import AdminAppsPage from './sso-ldap/pages/AdminAppsPage';
+import AdminGroupsPage from './sso-ldap/pages/AdminGroupsPage';
+import AdminMembersPage from './sso-ldap/pages/AdminMembersPage';
+import AdminUsersPage from './sso-ldap/pages/AdminUsersPage';
 
 let domReady = () => {
   React.initializeTouchEvents(true);

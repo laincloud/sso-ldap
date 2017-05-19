@@ -1,5 +1,5 @@
 [package]
-name = "sso"
+name = "sso-ldap"
 version = "0.1"
 authors = [
     "chaoyiwang <chaoyiwang@creditease.cn>",
@@ -30,4 +30,4 @@ deps = [
 ]
 
 [[assets.entry]]
-name = "sso"
+name = "sso-ldap"

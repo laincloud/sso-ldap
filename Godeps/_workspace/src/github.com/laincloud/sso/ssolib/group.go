@@ -65,7 +65,7 @@ func groupFromModel(g *group.Group) *Group {
 }
 
 func (g *Group) Validate() error {
-	if err := ValidateSlug(g.Name); err != nil {
+	if err := ValidateSlug(g.Name, 128); err != nil {
 		return err
 	}
 	if g.FullName != "" {
@@ -258,6 +258,9 @@ func (gr GroupResource) Delete(ctx context.Context, r *http.Request) (int, inter
 
 		g, err := group.GetGroupByName(mctx, groupname)
 		if err != nil {
+			if err == group.ErrGroupNotFound {
+				return http.StatusNotFound, "No such group"
+			}
 			panic(err)
 		}
 
@@ -410,23 +413,27 @@ func (mr MemberResource) Put(ctx context.Context, r *http.Request) (int, interfa
 				return http.StatusNotFound, "no such username"
 			}
 
-			ok, addingUserRole, err := g.GetMember(mctx, u)
-			log.Debug(u, u.GetName())
-			log.Debug(currentUser, currentUser.GetName())
-			if ok {
-				if addingUserRole != mrole {
-					log.Debug("update role,", addingUserRole, mrole)
-					if err := g.UpdateMember(mctx, u, mrole); err != nil {
-						panic(err)
+			directMembers, err := g.ListMembers(mctx)
+			if err != nil {
+				panic(err)
+			}
+			isAlreadyMember := false
+			for _, m := range directMembers {
+				if m.GetId() == u.GetId() {
+					isAlreadyMember = true
+					if m.Role != mrole {
+						if err := g.UpdateMember(mctx, u, mrole); err != nil {
+							panic(err)
+						}
 					}
+					break
 				}
-			} else {
-				if err != nil {
-					panic(err)
-				}
+			}
+			if !isAlreadyMember {
 				if err := g.AddMember(mctx, u, mrole); err != nil {
 					panic(err)
 				}
+
 			}
 		} else if g.GroupType == iuser.BACKENDGROUP {
 			if ubg, ok := ub.(iuser.BackendWithGroup); ok {

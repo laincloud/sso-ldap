@@ -16,9 +16,21 @@ import (
 	"github.com/laincloud/sso/ssolib/utils"
 )
 
+// the feature in this file is either the email(also as upn), or the email prefix
+
 const (
 	LDAPREALMNAME = "sso-ldap"
 )
+
+// since email as upn is hard to use as int, so we store it when a user logged in
+const CreateUPNTableSQL = `
+CREATE TABLE IF NOT EXISTS email_id (
+	id INT NOT NULL AUTO_INCREMENT,
+	email VARCHAR(64) NULL DEFAULT NULL,
+	PRIMARY KEY (id),
+	UNIQUE KEY (email)
+) DEFAULT CHARSET=latin1
+`
 
 var EMAIL_SUFFIX string
 
@@ -51,6 +63,7 @@ func New(url, cn, passwd string, mysqlDSN string, email string, ldapBase string)
 func (ub *UserBack) InitDatabase() {
 	tx := ub.DB.MustBegin()
 	tx.MustExec(createLdapGroupTableSQL)
+	tx.MustExec(CreateUPNTableSQL)
 	if err := tx.Commit(); err != nil {
 		panic(err)
 	}
@@ -75,8 +88,11 @@ func (ub *UserBack) ListUsers(ctx context.Context) ([]iuser.User, error) {
 }
 
 func (ub *UserBack) GetUser(id int) (iuser.User, error) {
-	employeeId := getEIdById(id)
-	user, err := ub.Search("sAMAccountName=" + employeeId)
+	upn, err := ub.getUPNById(id)
+	if err != nil {
+		return nil, err
+	}
+	user, err := ub.Search("userPrincipalName=" + upn)
 	if err != nil {
 		return user, err
 	}
@@ -90,6 +106,7 @@ func (ub *UserBack) GetUserByName(name string) (iuser.User, error) {
 }
 
 func (ub *UserBack) GetUserByEmail(email string) (iuser.User, error) {
+	log.Debug(email)
 	user, err := ub.Search("userPrincipalName=" + email)
 	if err != nil {
 		if err == ldap.ErrUserNotFound {
@@ -109,6 +126,7 @@ func (ub *UserBack) DeleteUser(user iuser.User) error {
 	return ErrForbidden
 }
 
+// deprecated
 func (ub *UserBack) AuthPassword(sub, passwd string) (bool, error) {
 	log.Debug(sub)
 	id, err := ub.UserSubToId(sub)
@@ -128,11 +146,24 @@ func (ub *UserBack) AuthPassword(sub, passwd string) (bool, error) {
 }
 
 func (ub *UserBack) AuthPasswordByFeature(feature, passwd string) (bool, iuser.User, error) {
+	if !strings.HasSuffix(feature, EMAIL_SUFFIX) {
+		feature = feature + EMAIL_SUFFIX
+	}
+	success, err := ub.C.Auth(feature, passwd)
+	log.Debug(err)
+	if success {
+		u, err := ub.GetUserByEmail(feature)
+		return true, u, err
+	}
 	return false, nil, nil
 }
 
 func (ub *UserBack) GetUserByFeature(f string) (iuser.User, error) {
-	return ub.GetUserByEmail(f)
+	if strings.HasSuffix(f, EMAIL_SUFFIX) {
+		return ub.GetUserByEmail(f)
+	} else {
+		return ub.GetUserByEmail(f + EMAIL_SUFFIX)
+	}
 }
 
 func (ub *UserBack) Name() string {

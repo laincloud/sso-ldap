@@ -6,7 +6,10 @@ import (
 	"github.com/laincloud/sso/ssolib/models"
 	"github.com/laincloud/sso/ssolib/models/app"
 	"github.com/laincloud/sso/ssolib/models/group"
+	"github.com/mijia/sweb/log"
 )
+
+var InitAdmin string
 
 func (ub *UserBack) InitModel(ctx interface{}) {
 
@@ -33,9 +36,11 @@ func (ub *UserBack) InitModel(ctx interface{}) {
 		panic(err)
 	}
 
-	iadmin, err := ub.GetUserByName("chaoyiwang")
+	iadmin, err := ub.GetUserByName(InitAdmin)
 
 	if err != nil {
+		log.Debug(InitAdmin)
+		log.Error(err)
 		panic(err)
 	}
 
