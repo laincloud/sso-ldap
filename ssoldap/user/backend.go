@@ -1,6 +1,7 @@
 package user
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,17 +18,26 @@ import (
 )
 
 // the feature in this file is either the email(also as upn), or the email prefix
+// if the user is in the ldap backend, only the email and id are valid in the user table; in this code as a example, the mobile is also valid, but the name should be the prefix of the UPN(email) by default, so not consider the old data.
+// if the user is not in the ldap, all the fields in the user table is valid
 
 const (
 	LDAPREALMNAME = "sso-ldap"
 )
 
-// since email as upn is hard to use as int, so we store it when a user logged in
-const CreateUPNTableSQL = `
-CREATE TABLE IF NOT EXISTS email_id (
+// for compatible with sso database
+const createUserTableSQL = `
+CREATE TABLE IF NOT EXISTS user (
 	id INT NOT NULL AUTO_INCREMENT,
+	name VARCHAR(32) NULL DEFAULT NULL,
+	fullname VARCHAR(128) CHARACTER SET utf8 NULL DEFAULT NULL,
 	email VARCHAR(64) NULL DEFAULT NULL,
+	password VARBINARY(60) NULL DEFAULT NULL,
+	mobile VARCHAR(11) NULL DEFAULT NULL,
+	created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id),
+	UNIQUE KEY (name),
 	UNIQUE KEY (email)
 ) DEFAULT CHARSET=latin1
 `
@@ -63,7 +73,7 @@ func New(url, cn, passwd string, mysqlDSN string, email string, ldapBase string)
 func (ub *UserBack) InitDatabase() {
 	tx := ub.DB.MustBegin()
 	tx.MustExec(createLdapGroupTableSQL)
-	tx.MustExec(CreateUPNTableSQL)
+	tx.MustExec(createUserTableSQL)
 	if err := tx.Commit(); err != nil {
 		panic(err)
 	}
@@ -75,7 +85,8 @@ func (ub *UserBack) ListUsers(ctx context.Context) ([]iuser.User, error) {
 	// FIXME 临时解决方案
 	db := ctx.Value("db").(*sqlx.DB)
 	userIds := []int{}
-	err := db.Select(&userIds, "SELECT DISTINCT user_id FROM user_group")
+	//	err := db.Select(&userIds, "SELECT DISTINCT user_id FROM user_group")
+	err := db.Select(&userIds, "SELECT id FROM user")
 	ret := make([]iuser.User, len(userIds))
 
 	log.Debug(userIds)
@@ -94,7 +105,15 @@ func (ub *UserBack) GetUser(id int) (iuser.User, error) {
 	}
 	user, err := ub.Search("userPrincipalName=" + upn)
 	if err != nil {
-		return user, err
+		if err != iuser.ErrUserNotFound {
+			return user, err
+		} else {
+			user, err = ub.getUserFromMysql(id)
+			if err != nil {
+				log.Error(err)
+				return nil, err
+			}
+		}
 	}
 	user.SetBackend(ub)
 
@@ -109,10 +128,14 @@ func (ub *UserBack) GetUserByEmail(email string) (iuser.User, error) {
 	log.Debug(email)
 	user, err := ub.Search("userPrincipalName=" + email)
 	if err != nil {
-		if err == ldap.ErrUserNotFound {
-			return user, iuser.ErrUserNotFound
+		if err != iuser.ErrUserNotFound {
+			return user, err
+		} else {
+			user, err = ub.getUserByEmailFromMysql(email)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return user, err
 	}
 	user.SetBackend(ub)
 	return user, nil
@@ -154,6 +177,13 @@ func (ub *UserBack) AuthPasswordByFeature(feature, passwd string) (bool, iuser.U
 	if success {
 		u, err := ub.GetUserByEmail(feature)
 		return true, u, err
+	} else {
+		u, err := ub.getUserByEmailFromMysql(feature)
+		if err == nil && u != nil {
+			if u.VerifyPassword([]byte(passwd)) {
+				return true, u, err
+			}
+		}
 	}
 	return false, nil, nil
 }
@@ -186,4 +216,29 @@ func (ub *UserBack) UserSubToId(sub string) (int, error) {
 	} else {
 		return strconv.Atoi(sub[len(LDAPREALMNAME):])
 	}
+}
+
+func (ub *UserBack) getUserFromMysql(id int) (*User, error) {
+	user := User{}
+	err := ub.DB.Get(&user, "SELECT * FROM user WHERE id=?", id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, iuser.ErrUserNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (ub *UserBack) getUserByEmailFromMysql(email string) (*User, error) {
+	user := User{}
+	err := ub.DB.Get(&user, "SELECT * FROM user WHERE email=?", email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, iuser.ErrUserNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+
 }

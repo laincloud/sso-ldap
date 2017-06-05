@@ -10,11 +10,6 @@ import (
 	"github.com/laincloud/sso/ssolib/models/iuser"
 )
 
-type UPN struct {
-	Id    int
-	Email string
-}
-
 func (ub *UserBack) Search(filter string) (*User, error) {
 	ret := &User{}
 
@@ -50,6 +45,7 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 		}
 	}
 	log.Debug("end search ldap")
+	ret.Mobile = ub.GetMobileByEmail(ret.Email)
 	return ret, nil
 }
 
@@ -60,13 +56,23 @@ func getUserNameByUPN(upn string) string {
 	return upn[0:atIndex]
 }
 
-// is the upn is not in mysql, insert and return the id
+func (ub *UserBack) GetMobileByEmail(email string) string {
+	// for example, just use the mysql backend
+	var mobile string
+	err := ub.DB.Get(&mobile, "SELECT mobile FROM user WHERE email=?", email)
+	if err != nil {
+		return ""
+	}
+	return mobile
+}
+
+// if the upn is not in mysql, insert and return the id
 func (ub *UserBack) getIdByUPN(upn string) (int, error) {
-	item := UPN{}
+	item := User{}
 	tx := ub.DB.MustBegin()
-	err := tx.Get(&item, "SELECT * FROM email_id  WHERE email=?", upn)
+	err := tx.Get(&item, "SELECT * FROM user WHERE email=?", upn)
 	if err == sql.ErrNoRows {
-		result, err1 := tx.Exec("INSERT INTO email_id (email) "+"VALUES(?)", upn)
+		result, err1 := tx.Exec("INSERT INTO user (email) "+"VALUES(?)", upn)
 		if err2 := tx.Commit(); err2 != nil {
 			log.Error(err2)
 			return -1, err2
@@ -90,7 +96,7 @@ func (ub *UserBack) getIdByUPN(upn string) (int, error) {
 }
 
 func (ub *UserBack) getUPNById(id int) (string, error) {
-	item := UPN{}
-	err := ub.DB.Get(&item, "SELECT * FROM email_id  WHERE id=?", id)
+	item := User{}
+	err := ub.DB.Get(&item, "SELECT * FROM user WHERE id=?", id)
 	return item.Email, err
 }

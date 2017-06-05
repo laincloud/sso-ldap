@@ -1,21 +1,28 @@
 package user
 
 import (
-	_ "fmt"
+	"fmt"
 
 	"github.com/mijia/sweb/log"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/laincloud/sso/ssolib/models/iuser"
 )
 
+const (
+	// Use ./cmd/bcryptcost tool to find approriate cost
+	BCRYPT_COST = 11
+)
+
 type User struct {
-	Id       int
-	Name     string
-	FullName string
-	Email    string
-	Mobile   string
-	Created  string
-	Updated  string
+	Id           int
+	Name         string
+	FullName     string
+	Email        string
+	PasswordHash []byte `db:"password"`
+	Mobile       string
+	Created      string
+	Updated      string
 
 	dn      string
 	backend iuser.UserBackend
@@ -84,4 +91,46 @@ func (u *User) GetPublicProfile() iuser.UserProfile {
 		FullName: u.GetFullName(),
 		Email:    u.GetEmail(),
 	}
+}
+
+func (u *User) VerifyPassword(password []byte) bool {
+	valid := bcrypt.CompareHashAndPassword(u.PasswordHash, password) == nil
+	if !valid {
+		return false
+	}
+
+	// Check bcrypt hash cost.  If it is not equals to BCRYPT_COST, rehash it.
+	cost, err := bcrypt.Cost(u.PasswordHash)
+	if err != nil {
+		log.Warnf("Weird!. Get bcrypt cost failed: %v", err)
+		return valid
+	}
+
+	if cost != BCRYPT_COST {
+		u.updatePassword(password)
+	}
+
+	return valid
+}
+
+func (u *User) updatePassword(password []byte) error {
+	passwordhash, err := bcrypt.GenerateFromPassword(password, BCRYPT_COST)
+	if err != nil {
+		return fmt.Errorf("Generate password hash failed: %s", err)
+	}
+
+	tx := u.backend.(*UserBack).DB.MustBegin()
+	_, err1 := tx.Exec(
+		"UPDATE user SET password=? WHERE id=?",
+		passwordhash, u.Id)
+
+	if err2 := tx.Commit(); err2 != nil {
+		return err2
+	}
+
+	if err1 != nil {
+		return err1
+	}
+
+	return nil
 }

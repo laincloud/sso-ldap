@@ -144,6 +144,14 @@
 			"Rev": "6fe211e493929a8aac0469b93f28b1d0688a9a3a"
 		},
 		{
+			"ImportPath": "golang.org/x/crypto/bcrypt",
+			"Rev": "c197bcf24cde29d3f73c7b4ac6fd41f4384e8af6"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/blowfish",
+			"Rev": "c197bcf24cde29d3f73c7b4ac6fd41f4384e8af6"
+		},
+		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "991d3e32f76f19ee6d9caadb3a22eae8d23315f7"
 		},
