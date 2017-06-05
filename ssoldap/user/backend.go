@@ -29,11 +29,11 @@ const (
 const createUserTableSQL = `
 CREATE TABLE IF NOT EXISTS user (
 	id INT NOT NULL AUTO_INCREMENT,
-	name VARCHAR(32) NULL DEFAULT NULL,
-	fullname VARCHAR(128) CHARACTER SET utf8 NULL DEFAULT NULL,
-	email VARCHAR(64) NULL DEFAULT NULL,
-	password VARBINARY(60) NULL DEFAULT NULL,
-	mobile VARCHAR(11) NULL DEFAULT NULL,
+	name VARCHAR(32) NOT NULL DEFAULT "",
+	fullname VARCHAR(128) CHARACTER SET utf8 NOT NULL DEFAULT "",
+	email VARCHAR(64) NOT NULL DEFAULT "",
+	password VARBINARY(60) NOT NULL DEFAULT "",
+	mobile VARCHAR(11) NOT NULL DEFAULT "",
 	created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id),
@@ -51,6 +51,8 @@ var (
 type UserBack struct {
 	C  *ldap.LdapClient
 	DB *sqlx.DB
+
+	MailId map[string]int
 }
 
 func New(url, cn, passwd string, mysqlDSN string, email string, ldapBase string) *UserBack {
@@ -65,8 +67,9 @@ func New(url, cn, passwd string, mysqlDSN string, email string, ldapBase string)
 	}
 	EMAIL_SUFFIX = email
 	return &UserBack{
-		C:  client,
-		DB: db,
+		C:      client,
+		DB:     db,
+		MailId: map[string]int{}, //used as cache TODO
 	}
 }
 
@@ -74,6 +77,7 @@ func (ub *UserBack) InitDatabase() {
 	tx := ub.DB.MustBegin()
 	tx.MustExec(createLdapGroupTableSQL)
 	tx.MustExec(createUserTableSQL)
+	ub.DB.SetMaxOpenConns(50)
 	if err := tx.Commit(); err != nil {
 		panic(err)
 	}
@@ -99,8 +103,14 @@ func (ub *UserBack) ListUsers(ctx context.Context) ([]iuser.User, error) {
 }
 
 func (ub *UserBack) GetUser(id int) (iuser.User, error) {
+	if id < 0 {
+		log.Error("unexpect id")
+		return nil, nil
+	}
 	upn, err := ub.getUPNById(id)
 	if err != nil {
+		log.Debug(id)
+		log.Error(err)
 		return nil, err
 	}
 	user, err := ub.Search("userPrincipalName=" + upn)

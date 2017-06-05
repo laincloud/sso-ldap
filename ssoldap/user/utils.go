@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"strings"
+	//	"time"
 
 	"github.com/mijia/sweb/log"
 
@@ -37,6 +38,7 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 				ret.Email = v
 				ret.Name = getUserNameByUPN(v)
 				ret.Id, err = ub.getIdByUPN(v)
+				log.Debug(ret.Id, err)
 			case "whenCreated":
 				ret.Created = v
 			case "whenChanged":
@@ -61,6 +63,7 @@ func (ub *UserBack) GetMobileByEmail(email string) string {
 	var mobile string
 	err := ub.DB.Get(&mobile, "SELECT mobile FROM user WHERE email=?", email)
 	if err != nil {
+		log.Debug(err)
 		return ""
 	}
 	return mobile
@@ -68,6 +71,7 @@ func (ub *UserBack) GetMobileByEmail(email string) string {
 
 // if the upn is not in mysql, insert and return the id
 func (ub *UserBack) getIdByUPN(upn string) (int, error) {
+	//time.Sleep(time.Second)
 	item := User{}
 	tx := ub.DB.MustBegin()
 	err := tx.Get(&item, "SELECT * FROM user WHERE email=?", upn)
@@ -89,8 +93,15 @@ func (ub *UserBack) getIdByUPN(upn string) (int, error) {
 		}
 	} else if err != nil {
 		log.Error(err)
+		if err2 := tx.Commit(); err != nil {
+			log.Error(err2)
+		}
 		return -1, err
 	} else {
+		if err2 := tx.Commit(); err != nil {
+			log.Error(err2)
+			return -1, err2
+		}
 		return item.Id, nil
 	}
 }
