@@ -138,6 +138,15 @@ export let Admin = {
     });
   },
 
+  addUser(token, tokenType, formData, callback) {
+    Fetch.text(`/api/users/`, 'POST', {token, tokenType}, formData, (code, txt) => {
+      callback && callback(code === 202, code === 202 ? "Successfully add the user" : txt);
+    }, (msg) => {
+      callback && callback(false, msg); 
+    });
+  },
+
+
   listApplications(token, tokenType, callback) {
     Fetch.json('/api/apps', 'GET', {token, tokenType}, null, (code, data) => {
       callback && callback(code === 200 ? data : []);

@@ -3,6 +3,7 @@ import React from 'react';
 import {History} from 'react-router';
 
 import AdminDeleteUserCard from '../components/AdminDeleteUserCard';
+import AdminAddUserCard from '../components/AdminAddUserCard';
 import AdminListUserCard from '../components/AdminListUserCard';
 import AdminAuthorizeMixin from '../components/AdminAuthorizeMixin';
 import {Admin} from '../models/Models';
@@ -18,6 +19,14 @@ let AdminUsersPage = React.createClass({
     const isValid = this.isSessionValid();
     return (
       <div className="mdl-grid">
+
+        <div className="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--4-col-phone">
+          { 
+            !isValid ? <p>等待认证中....</p>
+              : <AdminAddUserCard token={this.state.token} tokenType={this.state.tokenType} onSucc={this.postAddUser} />
+          }
+        </div>
+
         <div className="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--4-col-phone">
           { 
             !isValid ? <p>等待认证中....</p>
@@ -36,6 +45,12 @@ let AdminUsersPage = React.createClass({
   },
 
   postDeleteUser() {
+    if (this.isSessionValid()) {
+      this.refs.userList.reload();
+    }
+  },
+
+  postAddUser() {
     if (this.isSessionValid()) {
       this.refs.userList.reload();
     }
