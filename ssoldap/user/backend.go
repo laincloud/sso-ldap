@@ -156,7 +156,34 @@ func (ub *UserBack) CreateUser(user iuser.User, passwordHashed bool) error {
 }
 
 func (ub *UserBack) DeleteUser(user iuser.User) error {
-	return ErrForbidden
+	id := user.GetId()
+	upn, err := ub.getUPNById(id)
+	if err != nil {
+		log.Debug(id)
+		log.Error(err)
+		return err
+	}
+	_, err = ub.Search("userPrincipalName=" + upn)
+	if err != nil {
+		if err != iuser.ErrUserNotFound {
+			return err
+		} else { // if user is local, delete it
+			tx := ub.DB.MustBegin()
+			_, err1 := tx.Exec(
+				"DELETE FROM user WHERE id=?",
+				user.GetId())
+
+			if err2 := tx.Commit(); err2 != nil {
+				return err2
+			}
+			if err1 != nil {
+				return err1
+			}
+			return nil
+		}
+	} else {
+		return ErrForbidden
+	}
 }
 
 // deprecated
