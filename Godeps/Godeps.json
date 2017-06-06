@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/laincloud/sso-ldap",
-	"GoVersion": "go1.6",
+	"GoVersion": "go1.7",
 	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
@@ -44,53 +44,53 @@
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/lock",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/app",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/group",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/iuser",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/oauth2",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/testbackend",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/testhelper",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/utils",
-			"Comment": "0.2.0-29-g75a440b",
-			"Rev": "75a440bcaaf28cc20cb47634f085c3eccb5c69c9"
+			"Comment": "0.2.0-30-g3091694",
+			"Rev": "3091694303165825774aef15c9b021b87fd31dfb"
 		},
 		{
 			"ImportPath": "github.com/mendsley/gojwk",
