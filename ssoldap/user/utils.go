@@ -76,7 +76,7 @@ func (ub *UserBack) getIdByUPN(upn string) (int, error) {
 	tx := ub.DB.MustBegin()
 	err := tx.Get(&item, "SELECT * FROM user WHERE email=?", upn)
 	if err == sql.ErrNoRows {
-		result, err1 := tx.Exec("INSERT INTO user (email) "+"VALUES(?)", upn)
+		result, err1 := tx.Exec("INSERT INTO user (email,name) "+"VALUES(?,?)", upn, getUserNameByUPN(upn))
 		if err2 := tx.Commit(); err2 != nil {
 			log.Error(err2)
 			return -1, err2

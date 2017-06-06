@@ -5,4 +5,5 @@ import (
 )
 
 func AddHandlers(s *ssolib.Server) {
+	s.Post("/api/users", "UsersPost", UsersPost)
 }

@@ -357,7 +357,7 @@
         }
     },
     "definitions": {
-        "UserRegistration": {
+        "UserInfo": {
             "type": "object",
             "properties": {
                 "name": {

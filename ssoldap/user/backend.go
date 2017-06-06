@@ -10,6 +10,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mijia/sweb/log"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 
 	"github.com/laincloud/sso-ldap/ssoldap/user/ldap"
@@ -100,6 +101,64 @@ func (ub *UserBack) ListUsers(ctx context.Context) ([]iuser.User, error) {
 		log.Debug(err)
 	}
 	return ret, nil
+}
+
+func (ub *UserBack) AddUser(info UserInfo) error {
+	// first, check whether the user exists
+	// if yes, update the info;
+	// else, check if the user in the ldap; if so, return forbidden
+	// otherwise the user should be local and will be inserted in the local mysql user table;
+	// but there may be a problem if a user with that name will be added in the ldap;
+	// so, the admin should add some user with a particular name.
+	var passwordHash []byte
+	var err error
+	passwordHash, err = bcrypt.GenerateFromPassword([]byte(info.Password), BCRYPT_COST)
+	if err != nil {
+		return err
+	}
+
+	if _, err := ub.getUserByEmailFromMysql(info.Email); err == iuser.ErrUserNotFound {
+		_, err := ub.Search("userPrincipalName=" + info.Email)
+		if err != nil {
+			if err != iuser.ErrUserNotFound {
+				return err
+			} else {
+				// create the user in the local mysql
+
+				tx := ub.DB.MustBegin()
+				_, err1 := tx.Exec(
+					"INSERT INTO user (name, fullname, email, password, mobile) "+
+						"VALUES (?, ?, ?, ?, ?)",
+					info.Name, info.FullName, info.Email, passwordHash, info.Mobile)
+
+				if err2 := tx.Commit(); err2 != nil {
+					return err2
+				}
+				if err1 != nil {
+					return err1
+				}
+				return nil
+			}
+		} else {
+			return ErrForbidden
+		}
+	} else if err != nil {
+		return err
+	} else {
+		// update the user info
+		tx := ub.DB.MustBegin()
+		_, err1 := tx.Exec(
+			"UPDATE user SET fullname=?, password=?, mobile=? where name=? ",
+			info.FullName, passwordHash, info.Mobile, info.Name)
+		if err2 := tx.Commit(); err2 != nil {
+			return err2
+		}
+		if err1 != nil {
+			return err1
+		}
+		return nil
+	}
+	return nil
 }
 
 func (ub *UserBack) GetUser(id int) (iuser.User, error) {

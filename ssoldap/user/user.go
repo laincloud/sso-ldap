@@ -1,11 +1,14 @@
 package user
 
 import (
+	"context"
+	"errors"
 	"fmt"
 
 	"github.com/mijia/sweb/log"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/laincloud/sso/ssolib"
 	"github.com/laincloud/sso/ssolib/models/iuser"
 )
 
@@ -13,6 +16,45 @@ const (
 	// Use ./cmd/bcryptcost tool to find approriate cost
 	BCRYPT_COST = 11
 )
+
+type UserInfo struct {
+	Name     string `json:"name"`
+	FullName string `json:"fullname"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Mobile   string `json:"mobile"`
+}
+
+func (ur *UserInfo) Validate(ctx context.Context) error {
+	if ur.Name == "" {
+		return errors.New("Empty name")
+	}
+	if err := ssolib.ValidateSlug(ur.Name, 32); err != nil {
+		return err
+	}
+
+	if ur.FullName != "" {
+		if err := ssolib.ValidateFullName(ur.FullName); err != nil {
+			return err
+		}
+	}
+
+	if ur.Email == "" {
+		return errors.New("Empty email")
+	}
+	if err := ssolib.ValidateUserEmail(ur.Email, ctx); err != nil {
+		return err
+	}
+
+	if ur.Password == "" {
+		return errors.New("Empty password")
+	}
+	if len(ur.Password) < 4 {
+		return errors.New("Password too short")
+	}
+
+	return nil
+}
 
 type User struct {
 	Id           int
