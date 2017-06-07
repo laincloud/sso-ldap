@@ -1,12 +1,12 @@
 package user
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
 	"github.com/mijia/sweb/log"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/net/context"
 
 	"github.com/laincloud/sso/ssolib"
 	"github.com/laincloud/sso/ssolib/models/iuser"

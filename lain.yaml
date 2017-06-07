@@ -3,7 +3,7 @@ appname: sso-ldap
 build:
   base: golang
   prepare:
-    version: 20160720
+    version: 20170607
     script:
       - apt-get -y update
       - apt-get -y install unzip
