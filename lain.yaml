@@ -13,11 +13,11 @@ build:
       - mkdir -p /go/src/github.com/laincloud/
       - ln -sf /lain/app /go/src/github.com/laincloud/sso-ldap
       - go get github.com/mijia/gobuildweb
-      - make go-build
+      - cd /go/src/github.com/laincloud/sso-ldap && make go-build
     keep:
       - node_modules
   script:
-    - make go-build
+    - cd /go/src/github.com/laincloud/sso-ldap && make go-build
     - unzip -o /lain/app/sso-ldap-0.1.zip -d /lain/app
 
 release:
