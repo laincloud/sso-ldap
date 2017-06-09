@@ -274,10 +274,12 @@ func (ub *UserBack) AuthPasswordByFeature(feature, passwd string) (bool, iuser.U
 		u, err := ub.GetUserByEmail(feature)
 		return true, u, err
 	} else {
-		u, err := ub.getUserByEmailFromMysql(feature)
-		if err == nil && u != nil {
-			if u.VerifyPassword([]byte(passwd)) {
-				return true, u, err
+		if err != iuser.ErrUserNotFound {
+			u, err := ub.getUserByEmailFromMysql(feature)
+			if err == nil && u != nil {
+				if u.VerifyPassword([]byte(passwd)) {
+					return true, u, err
+				}
 			}
 		}
 	}
