@@ -274,11 +274,17 @@ func (ub *UserBack) AuthPasswordByFeature(feature, passwd string) (bool, iuser.U
 		u, err := ub.GetUserByEmail(feature)
 		return true, u, err
 	} else {
-		if err != iuser.ErrUserNotFound {
-			u, err := ub.getUserByEmailFromMysql(feature)
-			if err == nil && u != nil {
-				if u.VerifyPassword([]byte(passwd)) {
-					return true, u, err
+		_, err = ub.Search("userPrincipalName=" + feature)
+		if err != nil { //if in ladp, not use the local password
+			log.Debug(err)
+			if err != iuser.ErrUserNotFound {
+				return false, nil, nil
+			} else {
+				u, err := ub.getUserByEmailFromMysql(feature)
+				if err == nil && u != nil {
+					if u.VerifyPassword([]byte(passwd)) {
+						return true, u, err
+					}
 				}
 			}
 		}
