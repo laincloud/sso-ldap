@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	_ "net/http/pprof"
 	"runtime"
 
 	"github.com/mijia/sweb/log"
@@ -16,6 +17,11 @@ func init() {
 }
 
 func main() {
+
+	go func() {
+		http.ListenAndServe(":8080", nil)
+	}()
+
 	var webAddr, mysqlDSN, siteURL, smtpAddr, emailFrom, emailSuffix string
 	var prikeyfile, pubkeyfile string
 	var legalNets string
