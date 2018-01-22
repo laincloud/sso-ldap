@@ -265,6 +265,9 @@ func (ub *UserBack) AuthPassword(sub, passwd string) (bool, error) {
 }
 
 func (ub *UserBack) AuthPasswordByFeature(feature, passwd string) (bool, iuser.User, error) {
+	if passwd == "" {
+		return false, nil, errors.New("passwd required")
+	}
 	if !strings.HasSuffix(feature, EMAIL_SUFFIX) {
 		feature = feature + EMAIL_SUFFIX
 	}
