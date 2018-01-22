@@ -10,6 +10,7 @@ import (
 
 	"github.com/laincloud/sso/ssolib/models/group"
 	"github.com/laincloud/sso/ssolib/models/iuser"
+	"strings"
 )
 
 type UserWithGroups struct {
@@ -87,6 +88,92 @@ func (s *Server) UsersList(ctx context.Context, w http.ResponseWriter, r *http.R
 		panic(err)
 	}
 	w.Write(b)
+	return ctx
+}
+
+//Batch return users' profiles and groups(optional)
+func (s *Server) BatchUsers(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
+	log.Debugf("sso_debug: batch-users api begin.")
+	mctx := getModelContext(ctx)
+	ub := getUserBackend(ctx)
+
+	r.ParseForm()
+	userNames := r.Form.Get("name")
+	if userNames == "" {
+		http.Error(w, "username not given", http.StatusBadRequest)
+		return ctx
+	}
+	names := strings.Split(userNames, ",")
+	withGroup := false
+	if rGroup := r.Form.Get("group"); rGroup == "true" {
+		withGroup = true
+	}
+
+	currentUser := getCurrentUser(ctx)
+	isAdmin := false
+	if currentUser != nil {
+		adminsGroup, err := group.GetGroupByName(mctx, "admins")
+		if err != nil {
+			panic(err)
+		}
+		isAdmin, _, _ = adminsGroup.GetMember(mctx, currentUser)
+	}
+
+	profiles := make([]iuser.UserProfile, 0, len(names))
+	detailedProfiles := make([]*UserWithGroups, 0, len(names))
+	for _, name := range names {
+		u, err := ub.GetUserByName(name)
+		if err != nil {
+			if err == iuser.ErrUserNotFound {
+				continue
+			}
+			panic(err)
+		}
+		isSelf := false
+		if currentUser != nil && currentUser.GetName() == u.GetName() {
+			isSelf = true
+		}
+		if currentUser == nil || (!isAdmin && !isSelf) {
+			profiles = append(profiles, u.GetPublicProfile())
+		} else {
+			profiles = append(profiles, u.GetProfile())
+		}
+
+		if withGroup {
+			gs, err := group.GetGroupsOfUser(mctx, u)
+			if err != nil {
+				panic(err)
+			}
+			groups := make([]string, len(gs))
+			for i, g := range gs {
+				groups[i] = g.Name
+			}
+			ug := &UserWithGroups{
+				User:   profiles[len(profiles)-1],
+				Groups: groups,
+			}
+			detailedProfiles = append(detailedProfiles, ug)
+		}
+	}
+
+	if len(profiles) == 0 {
+		http.Error(w, "no such users", http.StatusNotFound)
+		return ctx
+	}
+
+	if withGroup {
+		b, err := json.Marshal(detailedProfiles)
+		if err != nil {
+			panic(err)
+		}
+		w.Write(b)
+	} else {
+		b, err := json.Marshal(profiles)
+		if err != nil {
+			panic(err)
+		}
+		w.Write(b)
+	}
 	return ctx
 }
 
