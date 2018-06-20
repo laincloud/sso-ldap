@@ -65,7 +65,7 @@ func main() {
 
 	userback := user.New(ldapUrl, ldapUser, ldapPassword, mysqlDSN, emailSuffix, ldapBase)
 
-	server := ssolib.NewServer(mysqlDSN, siteURL, smtpAddr, emailFrom, emailSuffix, isDebug, prikeyfile, pubkeyfile, sentryDSN, false)
+	server := ssolib.NewServer(mysqlDSN, siteURL, smtpAddr, emailFrom, "", emailSuffix, false, isDebug, prikeyfile, pubkeyfile, sentryDSN, false)
 
 	server.SetUserBackend(userback)
 
