@@ -338,9 +338,11 @@ func (ub *UserBack) getUserFromMysql(id int) (*User, error) {
 }
 
 func (ub *UserBack) getUserByEmailFromMysql(email string) (*User, error) {
+	log.Debugf("searching from sql")
 	user := User{}
 	err := ub.DB.Get(&user, "SELECT * FROM user WHERE email=?", email)
 	if err != nil {
+		log.Debug(err)
 		if err == sql.ErrNoRows {
 			return nil, iuser.ErrUserNotFound
 		}

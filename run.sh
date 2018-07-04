@@ -20,4 +20,4 @@ DEBUG=${DEBUG:-"false"}
 email=${EMAIL:-"@example.com"}
 
 
-exec ./sso-ldap-0.1.linux.amd64 -domain=$email -from="sso-ldap@$DOMAIN" -mysql="$MYSQL" -site="https://sso-ldap.$DOMAIN" -smtp="$SMTP" -web=":80" -sentry="$SENTRY" -ldapurl="$LDAPURL" -ldapuser="$LDAPUSER" -ldappasswd="$LDAPPASSWORD" -ldapbase="$LDAPBASE" -debug="$DEBUG"
+exec ./sso-ldap-0.1.linux.amd64 -domain=$email -from="sso-ldap@$DOMAIN" -mysql="$MYSQL" -site="https://sso-ldap.$DOMAIN" -smtp="$SMTP" -web=":80" -sentry="$SENTRY" -ldapurl="$LDAPURL" -ldapuser="$LDAPUSER" -ldappasswd="$LDAPPASSWORD" -ldapbase="$LDAPBASE" -debug="$DEBUG">>/lain/logs/sso.log 2>&1

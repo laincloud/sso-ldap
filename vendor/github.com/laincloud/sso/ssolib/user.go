@@ -94,16 +94,17 @@ func (s *Server) UsersList(ctx context.Context, w http.ResponseWriter, r *http.R
 //Batch return users' profiles and groups(optional)
 func (s *Server) BatchUsers(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
 	log.Debugf("sso_debug: batch-users api begin.")
+	defer log.Debugf("sso_debug: batch-users api end.")
 	mctx := getModelContext(ctx)
 	ub := getUserBackend(ctx)
 
 	r.ParseForm()
-	userNames := r.Form.Get("name")
-	if userNames == "" {
-		http.Error(w, "username not given", http.StatusBadRequest)
+	names := r.Form.Get("name")
+	if names == "" {
+		http.Error(w, "name not given", http.StatusBadRequest)
 		return ctx
 	}
-	names := strings.Split(userNames, ",")
+	nameSlice := strings.Split(names, ",")
 	withGroup := false
 	if rGroup := r.Form.Get("group"); rGroup == "true" {
 		withGroup = true
@@ -119,9 +120,9 @@ func (s *Server) BatchUsers(ctx context.Context, w http.ResponseWriter, r *http.
 		isAdmin, _, _ = adminsGroup.GetMember(mctx, currentUser)
 	}
 
-	profiles := make([]iuser.UserProfile, 0, len(names))
-	detailedProfiles := make([]*UserWithGroups, 0, len(names))
-	for _, name := range names {
+	profiles := make([]iuser.UserProfile, 0, len(nameSlice))
+	detailedProfiles := make([]*UserWithGroups, 0, len(nameSlice))
+	for _, name := range nameSlice {
 		u, err := ub.GetUserByName(name)
 		if err != nil {
 			if err == iuser.ErrUserNotFound {
