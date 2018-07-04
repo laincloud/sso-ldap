@@ -15,6 +15,7 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 	ret := &User{}
 
 	log.Debug("begin search ldap")
+	filter = "(&(" + filter + "))"
 	result, err := ub.C.SearchForUser(filter)
 	log.Debug("end with results")
 	if err != nil {
@@ -25,13 +26,13 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 		return ret, err
 	}
 
-	for _, entry := range result.Entries() {
-		ret.dn = entry.Dn()
-		for _, attr := range entry.Attributes() {
+	for _, entry := range result.Entries {
+		ret.dn = entry.DN
+		for _, attr := range entry.Attributes {
 			//			log.Debug(attr.Name())
-			v := attr.Values()[0]
+			v := attr.Values[0]
 			//			log.Debug(v)
-			switch attr.Name() {
+			switch attr.Name {
 			case "cn":
 				ret.FullName = v
 			case "userPrincipalName":

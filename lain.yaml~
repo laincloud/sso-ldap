@@ -3,18 +3,17 @@ appname: sso-ldapyifan
 build:
   base: golang
   prepare:
-    version: 201805021
+    version: 20180502
     script:
       - apt-get -y update
       - apt-get -y install unzip
       - curl -sL https://deb.nodesource.com/setup_9.x | su --preserve-environment -
       - apt-get install -y nodejs
       - go get github.com/tools/godep
+      - apt-get -y install libldap-dev
       - mkdir -p /go/src/github.com/laincloud/
       - ln -sf /lain/app /go/src/github.com/laincloud/sso-ldap
-      - go get gopkg.in/ldap.v2
       - go get github.com/mijia/gobuildweb
-      - go get gopkg.in/asn1-ber.v1
       - cd $GOPATH/src/github.com/mijia/gobuildweb && sed -i '/deps = append(deps, "browserify", "coffeeify", "envify", "uglifyify", "babelify", "babel-preset-es2015", "babel-preset-react", "nib", "stylus")/d' cmds.go  && go install
       - cd /go/src/github.com/laincloud/sso-ldap && make go-build
     keep:
@@ -27,6 +26,7 @@ release:
   dest_base: hongqn/go-npm
   script:
     - apt-get -y update
+    - apt-get -y install libldap2-dev telnet
   copy:
     - src: /lain/app/sso-ldap-0.1/*
       dest: /lain/app/
@@ -38,8 +38,6 @@ web:
     - TEMPLATES_PATH=/lain/app/templates
   secret_files:
     - secrets
-  logs:
-    - lain/logs/sso.log
 
 notify:
   slack: "#sso"
