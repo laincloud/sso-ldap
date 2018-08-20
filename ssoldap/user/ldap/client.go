@@ -1,6 +1,7 @@
 package ldap
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/mijia/sweb/log"
@@ -8,61 +9,66 @@ import (
 )
 
 var (
-	BASE string = ""
-)
-
-var (
-	// for the first ldap search
-	cUSER     string
-	cPASSWORD string
-
-	// for authenticating the user
-	ldapUrl string
+	ErrUserNotFound  = errors.New("USER NOT FOUND")
+	ErrUserUncertain = errors.New("USER UNCERTAIN")
 )
 
 type LdapClient struct {
-	Ldap *openldap.Ldap
+	baseDn   string
+	ldapUrl  string
+	user     string
+	password string
+	Ldap     *openldap.Ldap
 }
 
 func NewClient(url string, cn string, password string, base string) (*LdapClient, error) {
-	BASE = base
-	ldap, err := openldap.Initialize(url)
+	client := &LdapClient{
+		baseDn:   base,
+		ldapUrl:  url,
+		user:     cn,
+		password: password,
+	}
+
+	ldap, err := client.newConn()
+	if err != nil {
+		log.Errorf("failed to init ldap conn, err %+v", err)
+		return nil, err
+	}
+	log.Info("init ldap client successfully")
+	client.Ldap = ldap
+	return client, nil
+}
+
+func (c *LdapClient) newConn() (*openldap.Ldap, error) {
+	ldap, err := openldap.Initialize(c.ldapUrl)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	ldapUrl = url
 	ldap.SetOption(openldap.LDAP_OPT_PROTOCOL_VERSION, openldap.LDAP_VERSION3)
-	cUSER = cn
-	cPASSWORD = password
-	err = ldap.Bind(cn, password)
+	err = ldap.Bind(c.user, c.password)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	log.Debug("init ldap client successfully")
-	return &LdapClient{
-		Ldap: ldap,
-	}, nil
+	return ldap, nil
 }
 
 func (c *LdapClient) ReConnect() {
 	c.Close()
-	log.Debug("reconnect")
-	temp, err := NewClient(ldapUrl, cUSER, cPASSWORD, BASE)
-	log.Debug(temp, err)
-	c.Ldap = temp.Ldap
+	conn, err := c.newConn()
+	if err != nil {
+		log.Errorf("failed to reconnect ldap, err %+v", err)
+		return
+	}
+	c.Ldap = conn
 }
 
 func (c *LdapClient) Close() error {
-	return c.Ldap.Close()
-}
-
-func (c *LdapClient) search(filter string) (*openldap.LdapSearchResult, error) {
-	// LDAP_SCOPE_BASE, LDAP_SCOPE_ONELEVEL, LDAP_SCOPE_SUBTREE
-	scope := openldap.LDAP_SCOPE_SUBTREE
-	attributes := []string{"cn", "userPrincipalName"}
-	return c.Ldap.SearchAll(BASE, scope, filter, attributes)
+	if c.Ldap != nil {
+		return c.Ldap.Close()
+	}
+	return nil
 }
 
 func (c *LdapClient) SearchForUser(filter string) (*openldap.LdapSearchResult, error) {
@@ -72,7 +78,7 @@ func (c *LdapClient) SearchForUser(filter string) (*openldap.LdapSearchResult, e
 	//	attributes := []string{"cn", "whenCreated", "employeeID", "whenChanged",
 	//		"userPrincipalName", "mail", "mailNickname"}
 	log.Debug("begin to call ldap lib")
-	result, err := c.Ldap.SearchAll(BASE, scope, filter, attributes)
+	result, err := c.Ldap.SearchAll(c.baseDn, scope, filter, attributes)
 	log.Debug(result)
 	log.Debug("end to call ldap lib")
 	if err != nil {
@@ -80,7 +86,7 @@ func (c *LdapClient) SearchForUser(filter string) (*openldap.LdapSearchResult, e
 		//LDAP::Search() error : -1 (Can't contact LDAP server)
 		if strings.Index(err.Error(), "LDAP::Search() error : -1 (Can't contact LDAP server)") >= 0 {
 			c.ReConnect()
-			result, err = c.Ldap.SearchAll(BASE, scope, filter, attributes)
+			result, err = c.Ldap.SearchAll(c.baseDn, scope, filter, attributes)
 		} else {
 			return nil, err
 		}
@@ -100,4 +106,22 @@ func (c *LdapClient) SearchForOU(OUs string) (*openldap.LdapSearchResult, error)
 	attributes := []string{"name", "ou"}
 	filter := "(&(objectClass=organizationalUnit)(objectClass=top))"
 	return c.Ldap.SearchAll(base, scope, filter, attributes)
+}
+
+func (c *LdapClient) Auth(mail string, passwd string) (bool, error) {
+	ldap, err := openldap.Initialize(c.ldapUrl)
+	if err != nil {
+		return false, err
+	}
+	ldap.SetOption(openldap.LDAP_OPT_PROTOCOL_VERSION, openldap.LDAP_VERSION3)
+	err = ldap.Bind(mail, passwd)
+	if err != nil {
+		log.Debug(err)
+		return false, nil
+	} else {
+		// Close will panic if bind fails
+		ldap.Close()
+		log.Debug("success")
+		return true, nil
+	}
 }
