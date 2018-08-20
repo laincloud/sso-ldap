@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	_ "net/http/pprof"
 	"runtime"
 
@@ -18,11 +17,6 @@ func init() {
 }
 
 func main() {
-
-	go func() {
-		http.ListenAndServe(":8080", nil)
-	}()
-
 	var webAddr, mysqlDSN, siteURL, smtpAddr, emailFrom, emailSuffix string
 	var prikeyfile, pubkeyfile string
 	var legalNets string
