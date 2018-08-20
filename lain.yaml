@@ -3,7 +3,7 @@ appname: sso-ldap
 build:
   base: laincloud/golang:1.10
   prepare:
-    version: 20180814
+    version: 20180820
     script:
       - apt-get -y update
       - apt-get -y install unzip
