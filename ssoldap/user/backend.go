@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -56,9 +57,17 @@ type UserBack struct {
 	MailId map[string]int
 }
 
-func New(url, cn, passwd string, mysqlDSN string, email string, ldapBase string) *UserBack {
-	client, err := ldap.NewClient(url, cn, passwd, ldapBase)
-	log.Debug(url, " ", cn, " ", passwd)
+func New(ldapUrl, cn, passwd string, mysqlDSN string, email string, ldapBase string) *UserBack {
+	// ldap://xxx.xxx.xxx.xxx:389/
+	u, err := url.ParseRequestURI(ldapUrl)
+	if err != nil {
+		// todo 虽然我们不能强耦合ldap, 这里先这样，之后重构
+		log.Errorf("failed to parse ldapUrl %s, err %+v", ldapUrl, err)
+		return nil
+	}
+
+	port, _ := strconv.Atoi(u.Port())
+	client, err := ldap.NewClient(u.Hostname(), port, ldapBase, cn, passwd)
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +127,7 @@ func (ub *UserBack) AddUser(info UserInfo) error {
 	}
 
 	if _, err := ub.getUserByEmailFromMysql(info.Email); err == iuser.ErrUserNotFound {
-		_, err := ub.Search("userPrincipalName=" + info.Email)
+		_, err := ub.Search(info.Email)
 		if err != nil {
 			if err != iuser.ErrUserNotFound {
 				return err
@@ -172,7 +181,7 @@ func (ub *UserBack) GetUser(id int) (iuser.User, error) {
 		log.Error(err)
 		return nil, err
 	}
-	user, err := ub.Search("userPrincipalName=" + upn)
+	user, err := ub.Search(upn)
 	if err != nil {
 		if err != iuser.ErrUserNotFound {
 			return user, err
@@ -195,7 +204,7 @@ func (ub *UserBack) GetUserByName(name string) (iuser.User, error) {
 
 func (ub *UserBack) GetUserByEmail(email string) (iuser.User, error) {
 	log.Debug(email)
-	user, err := ub.Search("userPrincipalName=" + email)
+	user, err := ub.Search(email)
 	if err != nil {
 		if err != iuser.ErrUserNotFound {
 			return user, err
@@ -222,7 +231,7 @@ func (ub *UserBack) DeleteUser(user iuser.User) error {
 		log.Error(err)
 		return err
 	}
-	_, err = ub.Search("userPrincipalName=" + upn)
+	_, err = ub.Search(upn)
 	if err != nil {
 		if err != iuser.ErrUserNotFound {
 			return err
@@ -277,7 +286,7 @@ func (ub *UserBack) AuthPasswordByFeature(feature, passwd string) (bool, iuser.U
 		u, err := ub.GetUserByEmail(feature)
 		return true, u, err
 	} else {
-		_, err = ub.Search("userPrincipalName=" + feature)
+		_, err = ub.Search(feature)
 		if err != nil { //if in ladp, not use the local password
 			log.Debug(err)
 			if err != iuser.ErrUserNotFound {
