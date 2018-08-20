@@ -3,14 +3,13 @@ appname: sso-ldap
 build:
   base: golang
   prepare:
-    version: 20180502
+    version: 20180820
     script:
       - apt-get -y update
       - apt-get -y install unzip
       - curl -sL https://deb.nodesource.com/setup_9.x | su --preserve-environment -
       - apt-get install -y nodejs
       - go get github.com/tools/godep
-      - apt-get -y install libldap-dev
       - mkdir -p /go/src/github.com/laincloud/
       - ln -sf /lain/app /go/src/github.com/laincloud/sso-ldap
       - go get github.com/mijia/gobuildweb
@@ -26,7 +25,7 @@ release:
   dest_base: hongqn/go-npm
   script:
     - apt-get -y update
-    - apt-get -y install libldap2-dev telnet
+    - apt-get -y install telnet
   copy:
     - src: /lain/app/sso-ldap-0.1/*
       dest: /lain/app/
