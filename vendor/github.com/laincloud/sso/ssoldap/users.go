@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/laincloud/sso-ldap/ssoldap/user"
+	"github.com/laincloud/sso/ssoldap/user"
 	"github.com/laincloud/sso/ssolib"
 	"github.com/laincloud/sso/ssolib/models"
 	"github.com/laincloud/sso/ssolib/models/group"
