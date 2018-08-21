@@ -4,8 +4,8 @@ version = "0.1"
 authors = [
     "chaoyiwang <chaoyiwang@creditease.cn>",
 ]
-builder = "godep"
-build_opts = ["-race"]
+builder = ""
+build_opts = [""]
 deps = []
 
 [distribution]
