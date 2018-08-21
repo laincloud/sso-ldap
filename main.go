@@ -7,8 +7,8 @@ import (
 
 	"github.com/mijia/sweb/log"
 
-	"github.com/laincloud/sso-ldap/ssoldap"
-	"github.com/laincloud/sso-ldap/ssoldap/user"
+	"github.com/laincloud/sso/ssoldap"
+	"github.com/laincloud/sso/ssoldap/user"
 	"github.com/laincloud/sso/ssolib"
 )
 
