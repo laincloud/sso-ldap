@@ -1,4 +1,4 @@
-appname: sso-ldap
+appname: sso-ldap-pre
 
 build:
   base: laincloud/golang:1.10
