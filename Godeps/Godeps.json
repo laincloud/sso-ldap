@@ -44,53 +44,53 @@
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/lock",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/app",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/group",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/iuser",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/oauth2",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/testbackend",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/testhelper",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/utils",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/mendsley/gojwk",
@@ -176,8 +176,8 @@
 		},
 		{
 			"ImportPath": "github.com/laincloud/sso/ssolib/models/role",
-			"Comment": "0.2.0-73-g50f7e5e",
-			"Rev": "50f7e5e65bd48fc6d1988c0c2252a2b4cee5d4ec"
+			"Comment": "0.2.0-83-g2397122",
+			"Rev": "23971228d8b257939314d7202b3bc443f69f0524"
 		},
 		{
 			"ImportPath": "github.com/certifi/gocertifi",
