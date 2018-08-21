@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 
-	"github.com/laincloud/sso-ldap/ssoldap/user/ldap"
+	"github.com/laincloud/sso/ssoldap/user/ldap"
 	"github.com/laincloud/sso/ssolib/models/iuser"
 	"github.com/laincloud/sso/ssolib/utils"
 )
