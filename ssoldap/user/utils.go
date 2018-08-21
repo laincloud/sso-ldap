@@ -2,12 +2,11 @@ package user
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
-	//	"time"
 
 	"github.com/mijia/sweb/log"
 
-	"github.com/laincloud/sso-ldap/ssoldap/user/ldap"
 	"github.com/laincloud/sso/ssolib/models/iuser"
 )
 
@@ -19,31 +18,36 @@ func (ub *UserBack) Search(filter string) (*User, error) {
 	log.Debug("end with results")
 	if err != nil {
 		log.Debug(err)
-		if err == ldap.ErrUserNotFound {
-			err = iuser.ErrUserNotFound
-		}
 		return ret, err
 	}
 
-	for _, entry := range result.Entries() {
-		ret.dn = entry.Dn()
-		for _, attr := range entry.Attributes() {
-			//			log.Debug(attr.Name())
-			v := attr.Values()[0]
-			//			log.Debug(v)
-			switch attr.Name() {
-			case "cn":
-				ret.FullName = v
-			case "userPrincipalName":
-				ret.Email = v
-				ret.Name = getUserNameByUPN(v)
-				ret.Id, err = ub.getIdByUPN(v)
-				log.Debug(ret.Id, err)
-			case "whenCreated":
-				ret.Created = v
-			case "whenChanged":
-				ret.Updated = v
-			}
+	if len(result.Entries) == 0 {
+		err = iuser.ErrUserNotFound
+		return ret, err
+	}
+
+	if len(result.Entries) > 1 {
+		return ret, errors.New("too many entries found for user " + filter)
+	}
+
+	entry := result.Entries[0]
+	ret.dn = entry.DN
+	for _, attr := range entry.Attributes {
+		//			log.Debug(attr.Name())
+		v := attr.Values[0]
+		//			log.Debug(v)
+		switch attr.Name {
+		case "cn":
+			ret.FullName = v
+		case "userPrincipalName":
+			ret.Email = v
+			ret.Name = getUserNameByUPN(v)
+			ret.Id, err = ub.getIdByUPN(v)
+			log.Debug(ret.Id, err)
+		case "whenCreated":
+			ret.Created = v
+		case "whenChanged":
+			ret.Updated = v
 		}
 	}
 	log.Debug("end search ldap")

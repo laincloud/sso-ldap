@@ -75,23 +75,15 @@ func (ub *UserBack) CreateBackendGroup(name string, rules interface{}) (bool, iu
 	defer log.Debug("backend group created")
 	ouStr := rules.(string)
 	result, err := ub.C.SearchForOU(ouStr)
-	if result.Count() > 1 {
-		panic("here")
-	} else if result.Count() < 1 {
-		if strings.Index(err.Error(), "32 (No such object)") == -1 {
-			log.Error(err)
-		}
-		return false, nil, ErrOUNotFound
+	if err != nil {
+		return false, nil, err
+	}
+	if len(result.Entries) > 1 {
+		return false, nil, errors.New(ouStr + " OU is not unique")
+	} else if len(result.Entries) < 1 {
+		return false, nil, errors.New(ouStr + " OU not exist")
 	} else {
-		var fullname string
-		for _, entry := range result.Entries() {
-			fullname = entry.Dn()
-			for _, attr := range entry.Attributes() {
-				v := attr.Values()[0]
-				log.Debug(attr.Name())
-				log.Debug(v)
-			}
-		}
+		var fullname = result.Entries[0].DN
 		lGroup, err := ub.GetGroupByFullname(fullname)
 		if err != nil {
 			if err != ErrLDAPGroupNotFound {
