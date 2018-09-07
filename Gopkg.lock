@@ -47,6 +47,7 @@
   version = "v1.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/laincloud/sso"
   packages = [
     ".",
@@ -67,7 +68,7 @@
     "ssomysql",
     "ssomysql/user"
   ]
-  revision = "664cc1925d5a74629f8dd6e0c90d7a8a24d54d4f"
+  revision = "deb77bf0f3791d3900407a2c7c80a4741ddc8c5d"
 
 [[projects]]
   branch = "master"
