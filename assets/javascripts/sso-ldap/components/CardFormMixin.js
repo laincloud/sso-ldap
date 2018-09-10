@@ -49,7 +49,7 @@ let CardFormMixin = {
     }));
 
     let isValid = true;
-    if (!_.all(formValids)) {
+    if (!_.every(formValids)) {
       this.setState({ formValids });
       isValid = false;
     }
