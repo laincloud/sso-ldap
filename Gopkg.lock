@@ -68,7 +68,7 @@
     "ssomysql",
     "ssomysql/user"
   ]
-  revision = "9ac57c02fc7cf337fb9ad467138df493bcadca40"
+  revision = "01681b26d00d974d6821abfb7e9fb55b76dd0a73"
 
 [[projects]]
   branch = "master"
